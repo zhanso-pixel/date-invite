@@ -169,7 +169,7 @@
     <button class="back" data-go="s2">←</button>
     <h1>When works for you?</h1>
     <p class="sub">Pick a day & a time</p>
-    <div class="cal-head" id="calHead">June 2026</div>
+    <div class="cal-head" id="calHead">July 2026</div>
     <div class="dow"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
     <div class="days" id="days"></div>
     <div class="chips" id="timeChips"></div>
@@ -204,7 +204,7 @@
 const CONFIG = {
   yourName: "Zhanserik",          // <-- put YOUR name (shown in the final message)
   sheetUrl: "https://script.google.com/macros/s/AKfycbyHfoUEBTtnfKwMbEvsOu1aG33cE-598oOZ_wsEjoClHjOefJI1H7aq6gUdVIwczjc/exec",                   // <-- paste your Google Apps Script Web App URL here (see SETUP.md). Leave "" to skip saving.
-  musicFile: "song.mp3"           // <-- put a song.mp3 next to index.html to play the real song; if missing, a soft synth melody plays instead.
+  musicFile: "song.mp3"           // <-- real song to play. Must be next to index.html. On GitHub Pages/Netlify it will use this if present. Falls back to synth if blocked or missing.
 };
 
 /* ============================================================ */
@@ -289,27 +289,42 @@ function buildFood(){
 $("#foodNext").onclick=()=>{ buildCalendar(); show("s3"); };
 
 /* ============================================================
-   SCREEN 3 — calendar (June 2026) + time
+   SCREEN 3 — calendar + time
    ============================================================ */
-const MONTH={year:2026, month:5}; // month is 0-indexed -> 5 = June
+const MONTH={year:2026, month:6}; // preferred start month (0-indexed; auto-adjusts if past)
 const MONTH_NAMES=["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+function getDisplayMonth(){
+  const now=new Date();
+  let y=MONTH.year, m=MONTH.month;
+  const lastOfPref = new Date(y, m+1, 0);
+  lastOfPref.setHours(0,0,0,0);
+  const today0=new Date(); today0.setHours(0,0,0,0);
+  if(lastOfPref < today0){
+    // preferred month entirely in past -> fall back to current month
+    y=now.getFullYear(); m=now.getMonth();
+  }
+  return {year:y, month:m};
+}
+
 function buildCalendar(){
-  $("#calHead").textContent=`${MONTH_NAMES[MONTH.month]} ${MONTH.year}`;
+  const DM = getDisplayMonth();
+  $("#calHead").textContent=`${MONTH_NAMES[DM.month]} ${DM.year}`;
   const days=$("#days"); if(days.children.length) {} else {
-    const first=new Date(MONTH.year,MONTH.month,1);
+    const first=new Date(DM.year,DM.month,1);
     // Monday-first offset
     let lead=(first.getDay()+6)%7;
-    const total=new Date(MONTH.year,MONTH.month+1,0).getDate();
+    const total=new Date(DM.year,DM.month+1,0).getDate();
     const today=new Date(); today.setHours(0,0,0,0);
     for(let i=0;i<lead;i++){ const e=document.createElement("div"); e.className="day empty"; days.appendChild(e); }
     for(let d=1;d<=total;d++){
       const cell=document.createElement("div"); cell.className="day"; cell.textContent=d;
-      const cellDate=new Date(MONTH.year,MONTH.month,d);
+      const cellDate=new Date(DM.year,DM.month,d);
       if(cellDate<today){ cell.classList.add("off"); }
       else cell.onclick=()=>{
         days.querySelectorAll(".day").forEach(x=>x.classList.remove("sel"));
         cell.classList.add("sel");
-        state.dateLabel=`${MONTH_NAMES[MONTH.month]} ${d}, ${MONTH.year}`;
+        state.dateLabel=`${MONTH_NAMES[DM.month]} ${d}, ${DM.year}`;
         checkTimeNext();
       };
       days.appendChild(cell);
@@ -399,13 +414,15 @@ function burst(){
    Soft pentatonic notes over a warm pad, looping quietly.
    ============================================================ */
 const Music = (function(){
-  // If a file named in CONFIG.musicFile exists in the folder, we play THAT (the real song).
-  // Otherwise we fall back to a gentle synth melody. Drop "song.mp3" next to index.html.
-  const FILE = CONFIG.musicFile || "song.mp3";
+  // If a file named in CONFIG.musicFile exists, we play the real song.
+  // Falls back to soft synth only on error (e.g. missing file on GitHub Pages) or autoplay block.
+  // Works on GitHub Pages / Netlify when song.mp3 is in the same folder as index.html.
+  const FILE = "./" + (CONFIG.musicFile || "song.mp3");
   const FILE_VOL = 0.35;   // real-song volume (0..1) — keep it soft
-  let mode=null;           // "file" | "synth"
-  let audio=null;
-  let ctx, master, timer, on=false;
+  let mode = null;         // "file" | "synth"
+  let audio = null;
+  let fileFailed = false;  // permanent failure (404, bad file, etc). Transient blocks (autoplay) will retry on toggle.
+  let ctx, master, timer, on = false;
 
   /* ---------- synth fallback ---------- */
   const scale=[261.63,293.66,329.63,392.00,440.00,523.25,587.33,659.25];
@@ -453,23 +470,46 @@ const Music = (function(){
   }
   function startFile(){
     if(!audio){
-      audio=new Audio(FILE); audio.loop=true; audio.volume=0;
-      audio.addEventListener("error",()=>{ stat("song.mp3 error → melody"); if(mode!=="synth") startSynth(); });
+      audio = new Audio();
+      audio.src = FILE;
+      audio.loop = true;
+      audio.volume = 0;
+      audio.preload = "auto";
+      audio.muted = false;
+      audio.load(); // start fetching early (helps on GitHub Pages)
+      audio.addEventListener("error", () => {
+        const errCode = audio.error ? audio.error.code : "?";
+        stat("song.mp3 load error (" + errCode + ") → melody");
+        fileFailed = true;
+        if (mode !== "synth") startSynth();
+      });
     }
-    audio.play().then(()=>{ mode="file"; on=true; fadeAudio(FILE_VOL); setBtn(); stat("♪ playing song"); })
-                .catch(err=>{ stat("song blocked → melody ("+(err&&err.name)+")"); startSynth(); });
+    audio.play().then(() => {
+      mode = "file"; on = true; fadeAudio(FILE_VOL); setBtn(); stat("♪ playing song");
+    }).catch(err => {
+      // Autoplay policy / transient block — do NOT mark fileFailed so user can retry via mute button
+      const name = (err && err.name) || "Error";
+      stat("song blocked (" + name + ") → melody this time");
+      startSynth();
+    });
   }
   function stat(m){ var el=document.getElementById("mstat"); if(el) el.textContent=m; }
 
   /* ---------- public ---------- */
   function play(){
-    // Unlock the audio context synchronously inside the click, so the synth
-    // fallback can still make sound even if the file's play() promise rejects later.
+    // Unlock the audio context synchronously inside the click/gesture.
     if(!ctx){ try{ ctx=new (window.AudioContext||window.webkitAudioContext)();
       master=ctx.createGain(); master.gain.value=0; master.connect(ctx.destination);}catch(e){} }
     if(ctx&&ctx.state==="suspended") ctx.resume();
-    if(mode==="synth"){ startSynth(); return; }
-    startFile(); // try the real song; auto-fallback to synth melody
+
+    if (fileFailed) {
+      startSynth();
+      return;
+    }
+    // Always prefer trying the real song.mp3 (unless hard-failed).
+    // This allows re-attempting the file on later gestures (e.g. clicking the speaker icon)
+    // even if the very first autoplay attempt was blocked by the browser.
+    startFile();
   }
   function pause(){
     on=false;

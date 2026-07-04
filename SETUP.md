@@ -60,6 +60,12 @@ Just **double-click `index.html`** — it opens in your browser. Walk through th
 Easiest = **Netlify Drop**: go to `app.netlify.com/drop`, drag the `date-invite` folder in,
 and you get a public link to text her. (Other options: GitHub Pages, Vercel, Cloudflare Pages.)
 
+For **GitHub Pages**:
+- Push everything including `song.mp3` (the 7.7MB file must be in the repo).
+- Go to repo → Settings → Pages → Source: "Deploy from a branch" → branch `main` /root.
+- The music will try to play the real song first. If blocked by browser or the file is missing from the published site, it falls back to a soft melody.
+- Make sure you visit the `https://YOURNAME.github.io/date-invite/` URL (not the raw.githubusercontent.com link — raw does not host playable media properly).
+
 ---
 
 ## Customizing
@@ -67,5 +73,5 @@ and you get a public link to text her. (Other options: GitHub Pages, Vercel, Clo
 - **Food options** — edit the `FOODS` list in `index.html`.
 - **Time slots** — edit the `slots` array.
 - **Place suggestions** — edit the `PLACES` list.
-- **Month shown** — `MONTH = {year:2026, month:5}` (month is 0-indexed, so `5` = June). Days before today are greyed out.
+- **Month shown** — `MONTH = {year:2026, month:6}` (month is 0-indexed, so `6` = July). The calendar auto-switches to current month if the preferred one is entirely in the past. Days before today are greyed out and unselectable.
 - **Colors** — the `:root` variables at the top of the `<style>`.

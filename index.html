@@ -221,7 +221,9 @@
     margin:16px 0 8px; font-size:12px; font-weight:800;
     letter-spacing:.12em; text-transform:uppercase; color:#c48aa3;
   }
-  .times[hidden]{display:none}
+  #dayStep[hidden],#timeStep[hidden]{display:none}
+  #timeStep .chip{min-height:46px; padding:8px 12px; font-size:16px}
+  #timeStep .dock-chips{gap:8px; margin-top:2px}
   .chips{display:flex; flex-wrap:wrap; gap:8px; justify-content:center}
   .chip{
     min-height:44px; padding:8px 14px; border-radius:999px;
@@ -362,13 +364,15 @@
     .player{padding:8px}
     .day{min-height:32px; font-size:13px; border-radius:10px}
     #s3 h1{font-size:22px; margin:0}
-    #s3 .sub,#s3 .recap{display:none}
+    #dayStep .sub,#s3 .recap{display:none}
     #s3 .toprow{min-height:32px; margin:0}
     #s3 .cal-head{margin:0 0 2px}
     .dow{margin-bottom:2px}
     .day{min-height:28px}
-    .dock-chips{margin-top:6px; margin-bottom:2px}
-    .dock-chips .chip{min-height:36px; padding:4px 10px}
+    #timeStep .when-label{margin:6px 0 4px}
+    #timeStep .chip{min-height:40px; padding:6px 8px; font-size:15px}
+    #timeStep .dock-chips{gap:6px; margin:0}
+    #timeStep h1{font-size:22px}
   }
   @media (prefers-reduced-motion:reduce){
     *, *::before, *::after{
@@ -413,20 +417,26 @@
 
     <section class="screen" id="s3">
       <div class="screen-scroll"><div class="cluster">
-      <div class="toprow"><button class="back" type="button" data-go="s2">← Back</button></div>
-      <div class="recap" id="recapWhen"></div>
-      <h1>When works for you?</h1>
-      <p class="sub">Pick a day first.</p>
-      <div class="cal-head">
-        <button class="nav" id="prevMonth" type="button" aria-label="Previous month">‹</button>
-        <strong id="calLabel"></strong>
-        <button class="nav" id="nextMonth" type="button" aria-label="Next month">›</button>
+      <div id="dayStep">
+        <div class="toprow"><button class="back" type="button" data-go="s2">← Back</button></div>
+        <div class="recap" id="recapWhen"></div>
+        <h1>When works for you?</h1>
+        <p class="sub">Pick a day.</p>
+        <div class="cal-head">
+          <button class="nav" id="prevMonth" type="button" aria-label="Previous month">‹</button>
+          <strong id="calLabel"></strong>
+          <button class="nav" id="nextMonth" type="button" aria-label="Next month">›</button>
+        </div>
+        <div class="dow" aria-hidden="true"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
+        <div class="days" id="days"></div>
       </div>
-      <div class="dow" aria-hidden="true"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
-      <div class="days" id="days"></div>
-      <div class="times" id="times" hidden>
-        <p class="when-label">What time?</p>
+      <div id="timeStep" hidden>
+        <div class="toprow"><button class="back" id="changeDay" type="button">← Change day</button></div>
+        <h1>What time?</h1>
+        <p class="sub" id="chosenDay"></p>
+        <p class="when-label">Daytime</p>
         <div class="dock-chips" id="dayChips"></div>
+        <p class="when-label">Evening</p>
         <div class="dock-chips" id="eveChips"></div>
       </div>
       </div></div>
@@ -625,6 +635,7 @@ const DAY_SLOTS = ["11:00","12:00","13:00"];
 const EVE_SLOTS = ["17:00","18:00","19:00","20:00","21:00"];
 let view = { y: today.getFullYear(), m: today.getMonth() };
 let calendarReady = false;
+let choosingTime = false;
 
 function monthStart(y, m){ return new Date(y, m, 1); }
 function canShift(delta){
@@ -665,8 +676,9 @@ function renderCalendar(){
       btn.addEventListener("click", () => {
         state.y = view.y; state.m = view.m; state.d = d;
         state.dateLabel = MONTHS[view.m] + " " + d + ", " + view.y;
+        choosingTime = true;
         renderCalendar();
-        revealTimes(true);
+        showWhenStep();
         checkTime();
       });
     }
@@ -697,19 +709,18 @@ function fillTimes(el, slots){
     el.appendChild(c);
   });
 }
-function revealTimes(shouldScroll){
-  const box = $("#times");
-  const showTimes = Boolean(state.dateLabel);
-  const justOpened = showTimes && box.hidden;
-  box.hidden = !showTimes;
-  if (justOpened && shouldScroll) {
-    requestAnimationFrame(() => box.scrollIntoView({ behavior: "smooth", block: "nearest" }));
-  }
+function showWhenStep(){
+  const onTime = choosingTime && Boolean(state.dateLabel);
+  $("#dayStep").hidden = onTime;
+  $("#timeStep").hidden = !onTime;
+  if (onTime) $("#chosenDay").textContent = state.dateLabel;
+  const scroller = document.querySelector("#s3 .screen-scroll");
+  if (scroller) scroller.scrollTop = 0;
 }
 function checkTime(){
   const ready = Boolean(state.dateLabel && state.time);
   $("#timeNext").disabled = !ready;
-  $("#timeNeed").textContent = ready ? "That time looks good" : (state.dateLabel ? "Now pick a time" : "Pick a day");
+  $("#timeNeed").textContent = ready ? "That time looks good" : (choosingTime ? "Now pick a time" : "Pick a day");
 }
 function buildCalendar(){
   if (!calendarReady) {
@@ -717,10 +728,16 @@ function buildCalendar(){
     fillTimes($("#eveChips"), EVE_SLOTS);
     $("#prevMonth").addEventListener("click", () => { if (canShift(-1)) { view.m -= 1; if (view.m < 0) { view.m = 11; view.y--; } renderCalendar(); } });
     $("#nextMonth").addEventListener("click", () => { if (canShift(1)) { view.m += 1; if (view.m > 11) { view.m = 0; view.y++; } renderCalendar(); } });
+    $("#changeDay").addEventListener("click", () => {
+      choosingTime = false;
+      showWhenStep();
+      checkTime();
+    });
     calendarReady = true;
   }
+  if (state.dateLabel) choosingTime = true;
   renderCalendar();
-  revealTimes(false);
+  showWhenStep();
   checkTime();
 }
 $("#timeNext").addEventListener("click", () => { buildPlace(); show("s4"); });

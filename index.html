@@ -218,9 +218,10 @@
   .gap{min-height:40px}
 
   .when-label{
-    margin:14px 0 8px; font-size:12px; font-weight:800;
+    margin:16px 0 8px; font-size:12px; font-weight:800;
     letter-spacing:.12em; text-transform:uppercase; color:#c48aa3;
   }
+  .times[hidden]{display:none}
   .chips{display:flex; flex-wrap:wrap; gap:8px; justify-content:center}
   .chip{
     min-height:44px; padding:8px 14px; border-radius:999px;
@@ -415,7 +416,7 @@
       <div class="toprow"><button class="back" type="button" data-go="s2">← Back</button></div>
       <div class="recap" id="recapWhen"></div>
       <h1>When works for you?</h1>
-      <p class="sub">A day, then a time.</p>
+      <p class="sub">Pick a day first.</p>
       <div class="cal-head">
         <button class="nav" id="prevMonth" type="button" aria-label="Previous month">‹</button>
         <strong id="calLabel"></strong>
@@ -423,11 +424,14 @@
       </div>
       <div class="dow" aria-hidden="true"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
       <div class="days" id="days"></div>
-      <div class="dock-chips" id="dayChips"></div>
-      <div class="dock-chips" id="eveChips"></div>
+      <div class="times" id="times" hidden>
+        <p class="when-label">What time?</p>
+        <div class="dock-chips" id="dayChips"></div>
+        <div class="dock-chips" id="eveChips"></div>
+      </div>
       </div></div>
       <div class="next">
-        <p class="need" id="timeNeed">Pick a day and a time</p>
+        <p class="need" id="timeNeed">Pick a day</p>
         <button class="btn" id="timeNext" type="button" disabled>Next</button>
       </div>
     </section>
@@ -662,6 +666,7 @@ function renderCalendar(){
         state.y = view.y; state.m = view.m; state.d = d;
         state.dateLabel = MONTHS[view.m] + " " + d + ", " + view.y;
         renderCalendar();
+        revealTimes(true);
         checkTime();
       });
     }
@@ -692,10 +697,19 @@ function fillTimes(el, slots){
     el.appendChild(c);
   });
 }
+function revealTimes(shouldScroll){
+  const box = $("#times");
+  const showTimes = Boolean(state.dateLabel);
+  const justOpened = showTimes && box.hidden;
+  box.hidden = !showTimes;
+  if (justOpened && shouldScroll) {
+    requestAnimationFrame(() => box.scrollIntoView({ behavior: "smooth", block: "nearest" }));
+  }
+}
 function checkTime(){
   const ready = Boolean(state.dateLabel && state.time);
   $("#timeNext").disabled = !ready;
-  $("#timeNeed").textContent = ready ? "That time looks good" : "Pick a day and a time";
+  $("#timeNeed").textContent = ready ? "That time looks good" : (state.dateLabel ? "Now pick a time" : "Pick a day");
 }
 function buildCalendar(){
   if (!calendarReady) {
@@ -706,6 +720,7 @@ function buildCalendar(){
     calendarReady = true;
   }
   renderCalendar();
+  revealTimes(false);
   checkTime();
 }
 $("#timeNext").addEventListener("click", () => { buildPlace(); show("s4"); });

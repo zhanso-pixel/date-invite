@@ -431,7 +431,7 @@
         <div class="days" id="days"></div>
       </div>
       <div id="timeStep" hidden>
-        <div class="toprow"><button class="back" id="changeDay" type="button">← Change day</button></div>
+        <div class="toprow"><button class="back" id="changeDay" type="button">← Back</button></div>
         <h1>What time?</h1>
         <p class="sub" id="chosenDay"></p>
         <p class="when-label">Daytime</p>
@@ -538,7 +538,9 @@ function show(id){
   if (scroller) scroller.scrollTop = 0;
 }
 document.querySelectorAll(".back").forEach((b) => {
-  b.addEventListener("click", () => show(b.dataset.go));
+  b.addEventListener("click", () => {
+    if (b.dataset.go) show(b.dataset.go);
+  });
 });
 
 function paintRecap(){

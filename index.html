@@ -676,9 +676,7 @@ function renderCalendar(){
       btn.addEventListener("click", () => {
         state.y = view.y; state.m = view.m; state.d = d;
         state.dateLabel = MONTHS[view.m] + " " + d + ", " + view.y;
-        choosingTime = true;
         renderCalendar();
-        showWhenStep();
         checkTime();
       });
     }
@@ -718,9 +716,13 @@ function showWhenStep(){
   if (scroller) scroller.scrollTop = 0;
 }
 function checkTime(){
-  const ready = Boolean(state.dateLabel && state.time);
-  $("#timeNext").disabled = !ready;
-  $("#timeNeed").textContent = ready ? "That time looks good" : (choosingTime ? "Now pick a time" : "Pick a day");
+  if (!choosingTime) {
+    $("#timeNext").disabled = !state.dateLabel;
+    $("#timeNeed").textContent = state.dateLabel ? "Tap Next" : "Pick a day";
+    return;
+  }
+  $("#timeNext").disabled = !state.time;
+  $("#timeNeed").textContent = state.time ? "That time looks good" : "Now pick a time";
 }
 function buildCalendar(){
   if (!calendarReady) {
@@ -735,12 +737,23 @@ function buildCalendar(){
     });
     calendarReady = true;
   }
-  if (state.dateLabel) choosingTime = true;
+  choosingTime = false;
   renderCalendar();
   showWhenStep();
   checkTime();
 }
-$("#timeNext").addEventListener("click", () => { buildPlace(); show("s4"); });
+$("#timeNext").addEventListener("click", () => {
+  if (!choosingTime) {
+    if (!state.dateLabel) return;
+    choosingTime = true;
+    showWhenStep();
+    checkTime();
+    return;
+  }
+  if (!state.time) return;
+  buildPlace();
+  show("s4");
+});
 
 /* ---------- where ---------- */
 const PLACES = [

@@ -2,536 +2,986 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#ffd3e6" />
 <title>A little question…</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%96%3C/text%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,680&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet" />
 <style>
   :root{
-    --bg1:#ffd1e8; --bg2:#ff9ec4; --bg3:#c89bff;
-    --ink:#3a2b3f; --card:#ffffff; --accent:#ff3d7f; --accent2:#7a5cff;
-    --shadow:0 18px 40px rgba(180,50,110,.28);
+    --ink:#432433;
+    --muted:#9a7386;
+    --accent:#ff4d88;
+    --accent-deep:#e43774;
+    --lilac:#7d63f0;
+    --line:#ffd7e7;
+    --card:#fffdfd;
+    --pick:#fff6fa;
+    --shadow:0 22px 50px rgba(186, 62, 112, .18);
+    --safe-t:env(safe-area-inset-top);
+    --safe-b:env(safe-area-inset-bottom);
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{height:100%}
   body{
-    margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    color:var(--ink); overflow:hidden; overflow-x:hidden;
-    min-height:100vh; min-height:100dvh; padding:12px;
-    background:linear-gradient(135deg,var(--bg1),var(--bg2) 45%,var(--bg3));
-    background-size:200% 200%; animation:flow 14s ease infinite;
-    display:flex; align-items:center; justify-content:center;
+    margin:0;
+    height:100dvh;
+    box-sizing:border-box;
+    padding:max(14px, var(--safe-t)) 14px max(14px, var(--safe-b));
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--ink);
+    font-family:Nunito, "Segoe UI", sans-serif;
+    background:
+      radial-gradient(820px 480px at -10% -10%, #fff 0%, transparent 55%),
+      radial-gradient(680px 460px at 115% 0%, #ffd4ea 0%, transparent 50%),
+      radial-gradient(760px 520px at 50% 120%, #e5dbff 0%, transparent 52%),
+      linear-gradient(165deg, #fff0f6, #ffd5e8 48%, #efe6ff);
+    overflow:hidden;
   }
-  @keyframes flow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+  button,input{font-family:inherit}
+  button{cursor:pointer}
+  :focus-visible{outline:3px solid var(--lilac); outline-offset:2px}
 
-  .stage{ width:100%; max-width:540px; padding:4px; }
-
-  /* floating hearts background */
-  .hearts{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0}
-  .hearts span{position:absolute;bottom:-40px;font-size:22px;opacity:.5;animation:rise linear infinite}
-  @keyframes rise{to{transform:translateY(-115vh) rotate(360deg);opacity:0}}
-
-  .screen{
-    position:relative; z-index:1;
-    background:var(--card); border-radius:28px; padding:30px 24px 34px;
-    box-shadow:var(--shadow); text-align:center;
-    display:none; animation:pop .45s cubic-bezier(.2,.9,.25,1.3);
-    max-height:calc(100dvh - 24px); overflow-y:auto; -webkit-overflow-scrolling:touch;
+  .hearts{position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:0}
+  .hearts span{
+    position:absolute; bottom:-8vh; opacity:.38;
+    animation:rise linear infinite;
   }
-  .screen.active{display:block}
-  @keyframes pop{from{opacity:0;transform:translateY(18px) scale(.96)}to{opacity:1;transform:none}}
+  @keyframes rise{
+    to{transform:translateY(-115vh) rotate(18deg); opacity:0}
+  }
 
-  h1{font-size:clamp(24px,6vw,34px); margin:6px 0 4px; line-height:1.15}
-  .sub{color:#8a7d8f; font-size:15px; margin:0 0 22px}
-  .emoji-big{font-size:54px; display:block; margin-bottom:6px}
+  .shell{
+    position:relative;
+    z-index:1;
+    width:min(440px, 100%);
+    height:min(100%, 800px);
+    min-height:0;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
 
+  .panel{
+    flex:1 1 auto;
+    min-height:0;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    background:rgba(255,253,253,.9);
+    border:1px solid rgba(255,255,255,.95);
+    border-radius:30px;
+    box-shadow:var(--shadow), inset 0 1px 0 #fff;
+    padding:16px 16px 0;
+  }
+
+  .steps{display:flex; gap:6px; justify-content:center; margin:2px 0 8px; flex:none}
+  .steps span{
+    width:26px; height:6px; border-radius:99px; background:#f6d5e4;
+    transition:width .25s ease, background .25s ease;
+  }
+  .steps span.on{width:38px; background:var(--accent)}
+  .steps span.done{background:#ffb4ce}
+
+  .screen{display:none; text-align:center; min-height:0}
+  .screen.active{
+    display:flex; flex-direction:column; flex:1 1 auto; min-height:0;
+    animation:arrive .38s ease;
+  }
+  .screen-scroll{
+    flex:1 1 auto; min-height:0; overflow:auto;
+    -webkit-overflow-scrolling:touch;
+    display:flex; flex-direction:column;
+  }
+  .cluster{margin:auto 0; width:100%}
+  @keyframes arrive{
+    from{opacity:0; transform:translateY(12px)}
+    to{opacity:1; transform:none}
+  }
+
+  .kicker{
+    margin:0 0 6px;
+    font-size:12px;
+    font-weight:800;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--accent-deep);
+  }
+  h1{
+    font-family:Fraunces, Georgia, serif;
+    font-weight:680;
+    font-size:clamp(28px, 7vw, 38px);
+    line-height:1.12;
+    margin:0 0 8px;
+    letter-spacing:-.02em;
+  }
+  .sub{margin:0 0 16px; color:var(--muted); font-size:15px; font-weight:700}
+
+  .badge{
+    width:86px; height:86px; margin:2px auto 10px;
+    display:grid; place-items:center;
+    border-radius:50%;
+    font-size:42px;
+    background:radial-gradient(circle at 38% 32%, #fff, #ffe4f1 70%);
+    box-shadow:0 10px 24px rgba(255, 110, 160, .22);
+  }
+
+  .toprow{display:flex; align-items:center; min-height:44px; margin:-4px 0 4px}
+  .back{
+    border:0; background:#fff1f6; color:#c56b90;
+    min-height:40px; padding:0 14px; border-radius:999px;
+    font-weight:800; font-size:15px;
+  }
+  .back:active{transform:scale(.97)}
+
+  .ask-row{
+    display:flex; gap:12px; justify-content:center; align-items:center;
+    flex-wrap:wrap; min-height:72px; margin:8px 0 18px;
+  }
   .btn{
-    border:none; cursor:pointer; font-size:18px; font-weight:700; color:#fff;
-    padding:15px 30px; border-radius:999px; transition:transform .12s, box-shadow .2s, background .2s;
-    box-shadow:0 8px 18px rgba(255,61,127,.35);
+    border:0; color:#fff; font-weight:800; font-size:17px;
+    min-height:52px; padding:12px 26px; border-radius:999px;
+    transition:transform .12s ease, box-shadow .2s ease, background .2s;
   }
-  .btn:active{transform:scale(.96)}
-  .btn-yes{background:linear-gradient(135deg,#ff5fa2,#ff3d7f)}
-  .btn-no{background:linear-gradient(135deg,#b9a9c9,#9b8aad); box-shadow:0 6px 14px rgba(0,0,0,.15)}
-
-  .row{display:flex; gap:14px; justify-content:center; align-items:center; flex-wrap:wrap; position:relative; min-height:64px}
-
-  /* No button that can teleport (desktop) */
-  #noBtn.flee{position:fixed; z-index:5; transition:left .18s ease, top .18s ease}
-
-  /* food + chip grid */
-  .grid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:8px 0 22px}
-  @media(max-width:480px){.grid{grid-template-columns:repeat(2,1fr)}}
-  .card{
-    background:#fff7fb; border:2px solid #ffe1ee; border-radius:18px; padding:14px 6px;
-    cursor:pointer; transition:transform .12s, border-color .2s, background .2s; user-select:none;
+  .btn:active{transform:scale(.97)}
+  .btn-yes{
+    background:linear-gradient(180deg, #ff86b3, var(--accent) 55%, var(--accent-deep));
+    box-shadow:0 10px 22px rgba(255, 61, 127, .32);
+    transform:scale(var(--yes-scale, 1));
+    transform-origin:center bottom;
   }
-  .card .ic{font-size:30px; display:block}
-  .card .lb{font-size:13px; margin-top:6px; color:#6c5f72; font-weight:600}
-  .card:active{transform:scale(.95)}
-  .card.sel{border-color:var(--accent); background:#ffe8f1; transform:translateY(-2px)}
+  .btn-yes:active{transform:scale(calc(var(--yes-scale, 1) * .97))}
+  .btn-no{
+    background:#fff; color:#b57993;
+    border:2px solid #ffd3e6;
+    box-shadow:none;
+    transform:scale(var(--no-scale, 1));
+    max-width:100%;
+  }
+  .btn-no.flee{
+    position:fixed; z-index:6;
+    transition:left .18s ease, top .18s ease;
+    margin:0;
+  }
+  .btn:disabled{opacity:.38; cursor:not-allowed; box-shadow:none}
 
-  /* calendar */
-  .cal-head{display:flex; align-items:center; justify-content:center; gap:10px; font-weight:700; margin-bottom:10px; font-size:18px}
-  .dow{display:grid; grid-template-columns:repeat(7,1fr); gap:6px; font-size:12px; color:#a596ab; margin-bottom:6px}
-  .days{display:grid; grid-template-columns:repeat(7,1fr); gap:6px}
-  .day{padding:10px 0; border-radius:12px; cursor:pointer; font-weight:600; background:#faf4f9; transition:.15s; user-select:none}
-  .day.empty{background:transparent; cursor:default}
-  .day.off{opacity:.3; cursor:not-allowed; text-decoration:line-through}
-  .day:not(.off):not(.empty):active{transform:scale(.92)}
-  .day.sel{background:var(--accent); color:#fff}
+  .recap{
+    display:flex; flex-wrap:wrap; gap:6px; justify-content:center;
+    margin:0 0 14px;
+  }
+  .recap:empty{display:none}
+  .recap i{
+    font-style:normal; font-weight:800; font-size:13px;
+    background:#fff4f9; color:#a14d73;
+    border-radius:999px; padding:6px 10px;
+  }
 
-  .chips{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin:14px 0 4px}
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:4px 0 8px}
+  .pick{
+    border:2px solid var(--line); background:var(--pick);
+    border-radius:18px; min-height:84px; padding:12px 8px;
+    color:var(--ink); font-weight:800;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+    transition:transform .12s ease, border-color .15s, background .15s, box-shadow .15s;
+  }
+  .pick .ic{font-size:28px; line-height:1}
+  .pick .lb{font-size:14px}
+  .pick:active{transform:scale(.97)}
+  .pick[aria-pressed="true"]{
+    border-color:var(--accent);
+    background:#ffe9f3;
+    box-shadow:0 8px 18px rgba(255, 77, 136, .16);
+    transform:translateY(-1px);
+  }
+
+  .cal-head{display:flex; align-items:center; justify-content:space-between; margin:0 2px 8px}
+  .cal-head strong{font-size:17px}
+  .nav{
+    width:42px; height:42px; border-radius:50%; border:0;
+    background:#fff1f6; color:var(--accent-deep); font-size:22px; font-weight:800;
+  }
+  .nav:disabled{opacity:.35; cursor:not-allowed}
+  .dow,.days{display:grid; grid-template-columns:repeat(7, 1fr); gap:4px}
+  .dow{margin-bottom:4px; color:#c4a3b4; font-size:11px; font-weight:800; letter-spacing:.04em}
+  .day{
+    min-height:40px; border:0; border-radius:12px;
+    background:#fbf3f7; color:var(--ink); font-weight:800; font-size:14px;
+  }
+  .day.weekend{background:#fff0f6}
+  .day.today:not([aria-pressed="true"]){box-shadow:inset 0 0 0 2px #ffc1d8}
+  .day:disabled{opacity:.32; background:transparent; cursor:not-allowed}
+  .day[aria-pressed="true"]{background:var(--accent); color:#fff}
+  .gap{min-height:40px}
+
+  .when-label{
+    margin:14px 0 8px; font-size:12px; font-weight:800;
+    letter-spacing:.12em; text-transform:uppercase; color:#c48aa3;
+  }
+  .chips{display:flex; flex-wrap:wrap; gap:8px; justify-content:center}
   .chip{
-    padding:10px 16px; border-radius:999px; background:#f4eefb; border:2px solid #eaddfb;
-    cursor:pointer; font-weight:600; font-size:14px; transition:.15s; user-select:none;
+    min-height:44px; padding:8px 14px; border-radius:999px;
+    border:2px solid #eadffb; background:#f7f2ff;
+    font-weight:800; font-size:14px; color:var(--ink);
   }
-  .chip.sel{background:var(--accent2); color:#fff; border-color:var(--accent2)}
+  .chip[aria-pressed="true"]{background:var(--lilac); border-color:var(--lilac); color:#fff}
 
-  input[type=text]{
-    width:100%; padding:14px 16px; border-radius:14px; border:2px solid #eaddfb;
-    font-size:16px; outline:none; transition:.2s;
+  .place-input{
+    width:100%; margin-top:12px; min-height:52px;
+    padding:12px 14px; border-radius:16px; border:2px solid #eadffb;
+    font-size:16px; color:var(--ink); background:#fff; outline:none;
   }
-  input[type=text]:focus{border-color:var(--accent2)}
+  .place-input:focus{border-color:var(--lilac)}
 
-  .next{margin-top:22px}
-  .next .btn{background:linear-gradient(135deg,#8a6cff,#6f3dff); box-shadow:0 8px 18px rgba(111,61,255,.35)}
-  .next .btn:disabled{opacity:.45; cursor:not-allowed; filter:grayscale(.3)}
-
-  .summary{text-align:left; background:#fff7fb; border-radius:16px; padding:16px 18px; margin:18px 0 4px}
-  .summary div{padding:7px 0; border-bottom:1px dashed #ffd9e9; font-size:15px}
-  .summary div:last-child{border:none}
-  .summary b{color:var(--accent)}
-  .status{font-size:13px; color:#a596ab; margin-top:14px; min-height:18px}
-
-  .back{position:absolute; left:18px; top:18px; background:none; border:none; font-size:22px; cursor:pointer; color:#caa9bd}
-
-  #muteBtn{position:fixed; top:14px; right:14px; z-index:20; width:52px; height:52px; border-radius:50%;
-    border:2px solid #ffd1e8; cursor:pointer; font-size:24px; background:rgba(255,255,255,.92); backdrop-filter:blur(6px);
-    box-shadow:0 6px 16px rgba(180,50,110,.3); transition:transform .12s}
-  #muteBtn:active{transform:scale(.9)}
-  #muteBtn.hint{animation:pulse 1.6s ease-in-out infinite}
-  @keyframes pulse{0%,100%{box-shadow:0 6px 16px rgba(255,61,127,.35)}50%{box-shadow:0 6px 26px rgba(255,61,127,.85), 0 0 0 8px rgba(255,61,127,.12)}}
-  #mstat{position:fixed; top:70px; right:14px; z-index:20; font-size:11px; color:#7a5cff; background:rgba(255,255,255,.8);
-    padding:3px 8px; border-radius:8px; max-width:160px; text-align:right; min-height:0}
-  #mstat:empty{display:none}
-
-  /* ---------- phones ---------- */
-  @media(max-width:480px){
-    .screen{padding:24px 16px 26px; border-radius:22px}
-    h1{font-size:22px}
-    .sub{font-size:13.5px; margin-bottom:18px}
-    .emoji-big{font-size:46px}
-    .btn{font-size:17px; padding:14px 24px}
-    .grid{gap:10px; margin:6px 0 18px}
-    .card{padding:12px 4px; border-radius:15px}
-    .card .ic{font-size:27px}
-    .card .lb{font-size:12px}
-    .day{padding:11px 0; border-radius:10px}
-    .chip{padding:11px 15px; font-size:14px}
-    .back{font-size:24px; left:14px; top:14px; padding:4px}
-    #muteBtn{width:46px; height:46px; font-size:21px; top:10px; right:10px}
-    #mstat{top:60px; right:10px; font-size:10px; max-width:130px}
+  .next{
+    flex:none;
+    padding:8px 0 14px;
+    background:rgba(255,253,253,.98);
+    box-shadow:0 -12px 16px rgba(255,253,253,.95);
   }
-  @media(max-width:360px){
-    .grid{grid-template-columns:repeat(2,1fr)}
-    h1{font-size:20px}
-    .day{padding:9px 0; font-size:14px}
+  .next .place-input{margin:0 0 8px}
+  .dock-chips{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:8px}
+  .dock-chips .chip{min-height:40px; padding:6px 12px}
+  .need{min-height:18px; margin:0 0 8px; font-size:13px; font-weight:700; color:#c4a0b2}
+  .next .btn{
+    width:min(100%, 320px);
+    background:linear-gradient(180deg, #9b86ff, var(--lilac));
+    box-shadow:0 10px 20px rgba(125, 99, 240, .28);
+  }
+
+  .ticket{
+    text-align:left; margin:8px auto 12px; max-width:340px;
+    background:
+      radial-gradient(12px 12px at 0 58px, transparent 11px, #fff7fb 12px),
+      radial-gradient(12px 12px at 100% 58px, transparent 11px, #fff7fb 12px);
+    background-color:#fff7fb;
+    border-radius:18px;
+    padding:16px 16px 8px;
+    box-shadow:inset 0 0 0 1.5px #ffd5e6;
+  }
+  .ticket .stamp{
+    text-align:center; font-family:Fraunces, Georgia, serif;
+    font-size:22px; margin:0 0 8px;
+  }
+  .ticket div{
+    display:flex; justify-content:space-between; gap:12px;
+    padding:9px 0; border-top:1px dashed #ffd0e2; font-weight:700;
+  }
+  .ticket div:first-child{border-top:none}
+  .ticket b{font-weight:800; text-align:right}
+  .note{font-size:14px; color:var(--muted); font-weight:700; margin:8px 0 4px}
+  .linkish{
+    border:0; background:transparent; color:var(--lilac);
+    font-weight:800; font-size:14px; min-height:44px; margin-bottom:8px;
+  }
+
+  .player{
+    flex:0 0 auto;
+    display:grid;
+    grid-template-columns:58px 1fr;
+    gap:10px;
+    align-items:center;
+    padding:10px 12px 10px 10px;
+    border-radius:22px;
+    background:rgba(255,255,255,.94);
+    border:1px solid rgba(255,255,255,.98);
+    box-shadow:0 12px 30px rgba(186, 62, 112, .16);
+  }
+  .disc-btn{
+    position:relative; width:58px; height:58px; border:0; border-radius:50%;
+    background:transparent; padding:0;
+    display:grid; place-items:center;
+  }
+  .disc{
+    position:absolute; inset:0; border-radius:50%;
+    background:conic-gradient(from 30deg, #ff8ab5, #d9ccff, #ffe1ee, #ff5f96, #ff8ab5);
+    box-shadow:0 8px 16px rgba(255, 90, 145, .28), inset 0 0 0 3px rgba(255,255,255,.75);
+  }
+  .player.is-on .disc{animation:spin 4.8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .glyph{
+    position:relative; z-index:1; width:26px; height:26px; margin:0 auto;
+    border-radius:50%; background:#fff;
+    box-shadow:0 2px 6px rgba(120, 30, 60, .16);
+  }
+  .glyph::before{
+    content:""; position:absolute; left:10px; top:7px;
+    border-style:solid; border-width:6px 0 6px 9px;
+    border-color:transparent transparent transparent var(--accent-deep);
+  }
+  .player.is-on .glyph::before{
+    left:8px; top:7px; width:3px; height:12px;
+    border:0; background:var(--accent-deep);
+    box-shadow:6px 0 0 var(--accent-deep);
+  }
+  .track{display:flex; justify-content:space-between; gap:8px; align-items:baseline}
+  .track b{font-size:14px}
+  .track span, .hint{font-size:12px; font-weight:800; color:var(--muted)}
+  .hint{display:block; text-align:left; margin-top:1px}
+  input[type=range]{
+    -webkit-appearance:none; appearance:none;
+    width:100%; height:22px; margin:2px 0 0; background:transparent;
+  }
+  input[type=range]::-webkit-slider-runnable-track{
+    height:6px; border-radius:99px;
+    background:linear-gradient(90deg, #ffd0e3, #e4dbff);
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; appearance:none;
+    width:18px; height:18px; margin-top:-6px; border-radius:50%;
+    background:#fff; border:3px solid var(--accent);
+    box-shadow:0 2px 6px rgba(180, 50, 100, .25);
+  }
+  input[type=range]::-moz-range-track{
+    height:6px; border-radius:99px; background:#ffd6e8; border:0;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:16px; height:16px; border-radius:50%; background:#fff;
+    border:3px solid var(--accent);
+  }
+  .vol{display:flex; align-items:center; gap:6px; margin-top:0}
+  .vol span{font-size:12px; width:16px; text-align:center}
+  .vol input{height:18px}
+
+  @media (max-width:380px){
+    h1{font-size:26px}
+    .panel{padding:14px 12px 0; border-radius:24px}
+    .badge{width:74px; height:74px; font-size:36px}
+    .day{min-height:36px; font-size:13px; border-radius:10px}
+    .pick{min-height:76px}
+    .pick .lb{font-size:13px}
+  }
+  @media (max-height:700px){
+    .badge{width:64px; height:64px; font-size:32px; margin-bottom:6px}
+    h1{font-size:26px}
+    .sub{margin-bottom:8px}
+    .player{padding:8px}
+    .day{min-height:32px; font-size:13px; border-radius:10px}
+    #s3 h1{font-size:22px; margin:0}
+    #s3 .sub,#s3 .recap{display:none}
+    #s3 .toprow{min-height:32px; margin:0}
+    #s3 .cal-head{margin:0 0 2px}
+    .dow{margin-bottom:2px}
+    .day{min-height:28px}
+    .dock-chips{margin-top:6px; margin-bottom:2px}
+    .dock-chips .chip{min-height:36px; padding:4px 10px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *, *::before, *::after{
+      animation:none !important;
+      transition:none !important;
+    }
   }
 </style>
 </head>
 <body>
-<div class="hearts" id="hearts"></div>
-<button id="muteBtn" class="hint" title="Music on/off — tap to mute" aria-label="Music">🔊</button>
-<div id="mstat"></div>
+<div class="hearts" id="hearts" aria-hidden="true"></div>
 
-<div class="stage">
+<div class="shell">
+  <div class="panel" id="panel">
+    <div class="steps" id="steps" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
 
-  <!-- SCREEN 1: THE ASK -->
-  <section class="screen active" id="s1">
-    <span class="emoji-big" id="askEmoji">🥺</span>
-    <h1 id="askTitle">Will you go on a date with me?</h1>
-    <p class="sub">Take your time… (but choose wisely 💕)</p>
-    <div class="row" id="askRow">
-      <button class="btn btn-yes" id="yesBtn">Yes 💖</button>
-      <button class="btn btn-no" id="noBtn">No</button>
+    <section class="screen active" id="s1">
+      <div class="screen-scroll"><div class="cluster">
+      <p class="kicker">a little question</p>
+      <div class="badge" id="askEmoji">🥺</div>
+      <h1 id="askTitle">Will you go on a date with me?</h1>
+      <p class="sub">Take your time. Choose wisely.</p>
+      <div class="ask-row">
+        <button class="btn btn-yes" id="yesBtn" type="button">Yes 💖</button>
+        <button class="btn btn-no" id="noBtn" type="button">No</button>
+      </div>
+      </div></div>
+    </section>
+
+    <section class="screen" id="s2">
+      <div class="screen-scroll"><div class="cluster">
+      <div class="toprow"><button class="back" type="button" data-go="s1">← Back</button></div>
+      <h1>What should we eat?</h1>
+      <p class="sub">Pick the one that sounds like a good night.</p>
+      <div class="grid" id="foodGrid"></div>
+      </div></div>
+      <div class="next">
+        <p class="need" id="foodNeed">Tap a favorite to continue</p>
+        <button class="btn" id="foodNext" type="button" disabled>Next</button>
+      </div>
+    </section>
+
+    <section class="screen" id="s3">
+      <div class="screen-scroll"><div class="cluster">
+      <div class="toprow"><button class="back" type="button" data-go="s2">← Back</button></div>
+      <div class="recap" id="recapWhen"></div>
+      <h1>When works for you?</h1>
+      <p class="sub">A day, then a time.</p>
+      <div class="cal-head">
+        <button class="nav" id="prevMonth" type="button" aria-label="Previous month">‹</button>
+        <strong id="calLabel"></strong>
+        <button class="nav" id="nextMonth" type="button" aria-label="Next month">›</button>
+      </div>
+      <div class="dow" aria-hidden="true"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
+      <div class="days" id="days"></div>
+      <div class="dock-chips" id="dayChips"></div>
+      <div class="dock-chips" id="eveChips"></div>
+      </div></div>
+      <div class="next">
+        <p class="need" id="timeNeed">Pick a day and a time</p>
+        <button class="btn" id="timeNext" type="button" disabled>Next</button>
+      </div>
+    </section>
+
+    <section class="screen" id="s4">
+      <div class="screen-scroll"><div class="cluster">
+      <div class="toprow"><button class="back" type="button" data-go="s3">← Back</button></div>
+      <div class="recap" id="recapWhere"></div>
+      <h1>Where to?</h1>
+      <p class="sub">A spot, or type your own below.</p>
+      <div class="grid" id="placeGrid"></div>
+      </div></div>
+      <div class="next">
+        <input class="place-input" id="placeInput" type="text" maxlength="80" placeholder="or a place you love…" autocomplete="off" enterkeyhint="done" />
+        <p class="need" id="placeNeed">Pick a spot to continue</p>
+        <button class="btn" id="placeNext" type="button" disabled>It's a date</button>
+      </div>
+    </section>
+
+    <section class="screen" id="s5">
+      <div class="screen-scroll"><div class="cluster">
+      <div class="badge">🎉</div>
+      <h1>It's a date</h1>
+      <p class="sub">I'll be there.</p>
+      <div class="ticket" id="summary"></div>
+      <p class="note" id="status" role="status"></p>
+      <button class="linkish" id="editBtn" type="button">Change something</button>
+      </div></div>
+    </section>
+  </div>
+
+  <div class="player" id="player">
+    <button class="disc-btn" id="playBtn" type="button" aria-label="Play our song">
+      <span class="disc" aria-hidden="true"></span>
+      <span class="glyph" id="playGlyph" aria-hidden="true"></span>
+    </button>
+    <div>
+      <div class="track">
+        <b id="trackName">Our song</b>
+        <span id="trackTime">0:00</span>
+      </div>
+      <span class="hint" id="listenHint">Tap the heart, or anywhere on the card</span>
+      <input id="seek" type="range" min="0" max="1000" value="0" aria-label="Song position" />
+      <label class="vol">
+        <span id="volIcon" aria-hidden="true">♪</span>
+        <input id="volume" type="range" min="0" max="100" value="85" aria-label="Volume" />
+      </label>
     </div>
-  </section>
-
-  <!-- SCREEN 2: FOOD -->
-  <section class="screen" id="s2">
-    <h1>Yay! 🥰 What should we eat?</h1>
-    <p class="sub">Pick your favorite 🍜</p>
-    <div class="grid" id="foodGrid"></div>
-    <div class="next"><button class="btn" id="foodNext" disabled>Next →</button></div>
-  </section>
-
-  <!-- SCREEN 3: DATE & TIME -->
-  <section class="screen" id="s3">
-    <button class="back" data-go="s2">←</button>
-    <h1>When works for you?</h1>
-    <p class="sub">Pick a day & a time</p>
-    <div class="cal-head" id="calHead">July 2026</div>
-    <div class="dow"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
-    <div class="days" id="days"></div>
-    <div class="chips" id="timeChips"></div>
-    <div class="next"><button class="btn" id="timeNext" disabled>Next →</button></div>
-  </section>
-
-  <!-- SCREEN 4: PLACE -->
-  <section class="screen" id="s4">
-    <button class="back" data-go="s3">←</button>
-    <h1>Where to? 📍</h1>
-    <p class="sub">Pick a spot 💕</p>
-    <div class="chips" id="placeChips"></div>
-    <input type="text" id="placeInput" placeholder="or type your own…" autocomplete="off" />
-    <div class="next"><button class="btn" id="placeNext" disabled>It's a date →</button></div>
-  </section>
-
-  <!-- SCREEN 5: CONFIRM -->
-  <section class="screen" id="s5">
-    <span class="emoji-big">🎉</span>
-    <h1>It's a date!</h1>
-    <p class="sub">I'll be there at that moment. ❤️</p>
-    <div class="summary" id="summary"></div>
-    <div class="status" id="status"></div>
-  </section>
-
+  </div>
 </div>
 
 <script>
-/* ============================================================
-   CONFIG — edit these two lines
-   ============================================================ */
 const CONFIG = {
-  yourName: "Zhanserik",          // <-- put YOUR name (shown in the final message)
-  sheetUrl: "https://script.google.com/macros/s/AKfycbyHfoUEBTtnfKwMbEvsOu1aG33cE-598oOZ_wsEjoClHjOefJI1H7aq6gUdVIwczjc/exec",                   // <-- paste your Google Apps Script Web App URL here (see SETUP.md). Leave "" to skip saving.
-  musicFile: "song.mp3"           // <-- real song to play. Must be next to index.html. On GitHub Pages/Netlify it will use this if present. Falls back to synth if blocked or missing.
+  yourName: "Zhanserik",
+  sheetUrl: "https://script.google.com/macros/s/AKfycbyHfoUEBTtnfKwMbEvsOu1aG33cE-598oOZ_wsEjoClHjOefJI1H7aq6gUdVIwczjc/exec",
+  musicFile: "song.mp3"
 };
 
-/* ============================================================ */
-const state = { food:null, dateLabel:null, time:null, place:null };
-const $ = s => document.querySelector(s);
+const state = { food:null, y:null, m:null, d:null, dateLabel:null, time:null, place:null };
+const $ = (s) => document.querySelector(s);
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const today = new Date();
+today.setHours(0,0,0,0);
 
-/* ---- floating hearts ---- */
+function esc(s){
+  return String(s ?? "").replace(/[&<>"']/g, (c) => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+  }[c]));
+}
+
 (function hearts(){
-  const box = $("#hearts"), set = ["💕","💖","💗","🌸","✨","💞"];
-  for(let i=0;i<16;i++){
-    const h=document.createElement("span");
-    h.textContent=set[i%set.length];
-    h.style.left=Math.random()*100+"vw";
-    h.style.fontSize=(14+Math.random()*22)+"px";
-    h.style.animationDuration=(7+Math.random()*9)+"s";
-    h.style.animationDelay=(-Math.random()*9)+"s";
+  const box = $("#hearts");
+  const set = ["💕","💖","💗","🌸","✨","💞"];
+  for (let i = 0; i < 12; i++) {
+    const h = document.createElement("span");
+    h.textContent = set[i % set.length];
+    h.style.left = Math.random() * 100 + "vw";
+    h.style.fontSize = (14 + Math.random() * 18) + "px";
+    h.style.animationDuration = (9 + Math.random() * 10) + "s";
+    h.style.animationDelay = (-Math.random() * 12) + "s";
     box.appendChild(h);
   }
 })();
 
 function show(id){
-  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
-  $("#"+id).classList.add("active");
+  document.querySelectorAll(".screen").forEach((s) => s.classList.toggle("active", s.id === id));
+  const step = { s1:0, s2:1, s3:2, s4:3, s5:4 }[id];
+  $("#steps").querySelectorAll("span").forEach((dot, i) => {
+    dot.classList.toggle("on", id !== "s5" && i === step);
+    dot.classList.toggle("done", i < step || id === "s5");
+  });
+  paintRecap();
+  const scroller = document.querySelector(".screen.active .screen-scroll");
+  if (scroller) scroller.scrollTop = 0;
 }
-document.querySelectorAll(".back").forEach(b=>b.onclick=()=>show(b.dataset.go));
+document.querySelectorAll(".back").forEach((b) => {
+  b.addEventListener("click", () => show(b.dataset.go));
+});
 
-/* ============================================================
-   SCREEN 1 — the playful No button
-   ============================================================ */
-const yesBtn=$("#yesBtn"), noBtn=$("#noBtn"), askRow=$("#askRow");
+function paintRecap(){
+  const bits = [];
+  if (state.food) bits.push(state.food);
+  if (state.dateLabel) bits.push(state.dateLabel);
+  if (state.time) bits.push(state.time);
+  const html = bits.map((b) => `<i>${esc(b)}</i>`).join("");
+  $("#recapWhen").innerHTML = state.food ? `<i>${esc(state.food)}</i>` : "";
+  $("#recapWhere").innerHTML = html;
+}
+
+/* ---------- the ask ---------- */
+const yesBtn = $("#yesBtn");
+const noBtn = $("#noBtn");
 const canHover = window.matchMedia("(hover:hover) and (pointer:fine)").matches;
-const noLines=["No","Are you sure?","Really sure?","Think again 🙃","Last chance…","You can't 😄","Just say yes 💗"];
-let noStage=0, yesScale=1;
+const noLines = ["No", "Are you sure?", "Really sure?", "Think again", "Last chance", "You can't", "Just say yes"];
+let noStage = 0;
+let yesScale = 1;
+let fleeLock = 0;
 
-function growYes(){ yesScale=Math.min(yesScale+0.18,2.4); yesBtn.style.transform=`scale(${yesScale})`; }
+function growYes(){
+  const cap = canHover ? 1.65 : 1.42;
+  yesScale = Math.min(yesScale + 0.12, cap);
+  yesBtn.style.setProperty("--yes-scale", String(yesScale));
+}
 
-if(canHover){
-  // Desktop: the No button flees from the cursor
-  noBtn.addEventListener("mouseenter",fleeNo);
-  noBtn.addEventListener("click",fleeNo); // in case they're fast
-  function fleeNo(){
-    noBtn.classList.add("flee");
-    const pad=20, w=noBtn.offsetWidth, h=noBtn.offsetHeight;
-    const x=pad+Math.random()*(window.innerWidth-w-pad*2);
-    const y=pad+Math.random()*(window.innerHeight-h-pad*2);
-    noBtn.style.left=x+"px"; noBtn.style.top=y+"px";
-    growYes();
-  }
-}else{
-  // Mobile: No shrinks + changes text, Yes grows
-  noBtn.addEventListener("click",e=>{
+function fleeNo(){
+  const now = Date.now();
+  if (now - fleeLock < 220) return;
+  fleeLock = now;
+  noStage = Math.min(noStage + 1, noLines.length - 1);
+  noBtn.textContent = noLines[noStage];
+  noBtn.classList.add("flee");
+  const pad = 12;
+  const playerTop = $("#player").getBoundingClientRect().top;
+  const w = noBtn.offsetWidth;
+  const h = noBtn.offsetHeight;
+  const maxX = window.innerWidth - w - pad;
+  const maxY = playerTop - h - pad;
+  const x = pad + Math.random() * Math.max(0, maxX - pad);
+  const y = pad + Math.random() * Math.max(40, maxY - pad);
+  noBtn.style.left = x + "px";
+  noBtn.style.top = y + "px";
+  growYes();
+}
+
+if (canHover) {
+  noBtn.addEventListener("pointerenter", fleeNo);
+  noBtn.addEventListener("click", (e) => { e.preventDefault(); fleeNo(); });
+} else {
+  noBtn.addEventListener("click", (e) => {
     e.preventDefault();
     noStage++;
-    noBtn.textContent = noLines[Math.min(noStage,noLines.length-1)];
-    const s=Math.max(1-noStage*0.16,0.25);
-    noBtn.style.transform=`scale(${s})`;
+    noBtn.textContent = noLines[Math.min(noStage, noLines.length - 1)];
+    noBtn.style.setProperty("--no-scale", String(Math.max(1 - noStage * 0.12, 0.4)));
     growYes();
-    if(noStage>=6){ noBtn.style.pointerEvents="none"; noBtn.style.opacity=.4; }
+    if (noStage >= noLines.length - 1) {
+      noBtn.style.opacity = ".45";
+      noBtn.style.pointerEvents = "none";
+    }
   });
 }
-yesBtn.addEventListener("click",()=>{ buildFood(); show("s2"); });
+yesBtn.addEventListener("click", () => { buildFood(); show("s2"); });
 
-/* ============================================================
-   SCREEN 2 — food
-   ============================================================ */
-const FOODS=[
-  ["🍜","Ramen"],["🍰","Dessert"],["🍸","Bar"],["🍣","Sushi"],
-  ["🍕","Pizza"],["🍖","BBQ"],["☕","Coffee"],["🎲","Surprise me"]
+/* ---------- food ---------- */
+const FOODS = [
+  ["🍜","Ramen"], ["🍰","Dessert"], ["🍸","Bar"], ["🍣","Sushi"],
+  ["🍕","Pizza"], ["🍖","BBQ"], ["☕","Coffee"], ["🎲","Surprise me"]
 ];
 function buildFood(){
-  const g=$("#foodGrid"); if(g.children.length) return;
-  FOODS.forEach(([ic,lb])=>{
-    const c=document.createElement("div"); c.className="card";
-    c.innerHTML=`<span class="ic">${ic}</span><span class="lb">${lb}</span>`;
-    c.onclick=()=>{
-      g.querySelectorAll(".card").forEach(x=>x.classList.remove("sel"));
-      c.classList.add("sel"); state.food=`${ic} ${lb}`; $("#foodNext").disabled=false;
-    };
-    g.appendChild(c);
-  });
-}
-$("#foodNext").onclick=()=>{ buildCalendar(); show("s3"); };
-
-/* ============================================================
-   SCREEN 3 — calendar + time
-   ============================================================ */
-const MONTH={year:2026, month:6}; // preferred start month (0-indexed; auto-adjusts if past)
-const MONTH_NAMES=["January","February","March","April","May","June","July","August","September","October","November","December"];
-
-function getDisplayMonth(){
-  const now=new Date();
-  let y=MONTH.year, m=MONTH.month;
-  const lastOfPref = new Date(y, m+1, 0);
-  lastOfPref.setHours(0,0,0,0);
-  const today0=new Date(); today0.setHours(0,0,0,0);
-  if(lastOfPref < today0){
-    // preferred month entirely in past -> fall back to current month
-    y=now.getFullYear(); m=now.getMonth();
-  }
-  return {year:y, month:m};
-}
-
-function buildCalendar(){
-  const DM = getDisplayMonth();
-  $("#calHead").textContent=`${MONTH_NAMES[DM.month]} ${DM.year}`;
-  const days=$("#days"); if(days.children.length) {} else {
-    const first=new Date(DM.year,DM.month,1);
-    // Monday-first offset
-    let lead=(first.getDay()+6)%7;
-    const total=new Date(DM.year,DM.month+1,0).getDate();
-    const today=new Date(); today.setHours(0,0,0,0);
-    for(let i=0;i<lead;i++){ const e=document.createElement("div"); e.className="day empty"; days.appendChild(e); }
-    for(let d=1;d<=total;d++){
-      const cell=document.createElement("div"); cell.className="day"; cell.textContent=d;
-      const cellDate=new Date(DM.year,DM.month,d);
-      if(cellDate<today){ cell.classList.add("off"); }
-      else cell.onclick=()=>{
-        days.querySelectorAll(".day").forEach(x=>x.classList.remove("sel"));
-        cell.classList.add("sel");
-        state.dateLabel=`${MONTH_NAMES[DM.month]} ${d}, ${DM.year}`;
-        checkTimeNext();
-      };
-      days.appendChild(cell);
-    }
-  }
-  const slots=["11:00","12:00","13:00","17:00","18:00","19:00","20:00","21:00"];
-  const tc=$("#timeChips");
-  if(!tc.children.length){
-    slots.forEach(t=>{
-      const c=document.createElement("div"); c.className="chip"; c.textContent=t;
-      c.onclick=()=>{ tc.querySelectorAll(".chip").forEach(x=>x.classList.remove("sel")); c.classList.add("sel"); state.time=t; checkTimeNext(); };
-      tc.appendChild(c);
+  const g = $("#foodGrid");
+  if (g.children.length) return;
+  FOODS.forEach(([ic, lb]) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "pick";
+    b.setAttribute("aria-pressed", "false");
+    b.innerHTML = `<span class="ic">${ic}</span><span class="lb">${lb}</span>`;
+    b.addEventListener("click", () => {
+      g.querySelectorAll(".pick").forEach((x) => x.setAttribute("aria-pressed", "false"));
+      b.setAttribute("aria-pressed", "true");
+      state.food = ic + " " + lb;
+      $("#foodNext").disabled = false;
+      $("#foodNeed").textContent = "Cute choice";
     });
-  }
-}
-function checkTimeNext(){ $("#timeNext").disabled=!(state.dateLabel&&state.time); }
-$("#timeNext").onclick=()=>{ buildPlace(); show("s4"); };
-
-/* ============================================================
-   SCREEN 4 — place
-   ============================================================ */
-const PLACES=["Cinema 🎬","Cafe ☕","The Mall 🛍️","Park & walk 🌳","Bowling 🎳","Ice rink ⛸️","Art gallery 🎨","Your pick 😉"];
-function buildPlace(){
-  const pc=$("#placeChips"); if(pc.children.length) return;
-  PLACES.forEach(p=>{
-    const c=document.createElement("div"); c.className="chip"; c.textContent=p;
-    c.onclick=()=>{ pc.querySelectorAll(".chip").forEach(x=>x.classList.remove("sel")); c.classList.add("sel"); $("#placeInput").value=p; state.place=p; $("#placeNext").disabled=false; };
-    pc.appendChild(c);
+    g.appendChild(b);
   });
 }
-$("#placeInput").addEventListener("input",e=>{
-  state.place=e.target.value.trim();
-  $("#placeChips").querySelectorAll(".chip").forEach(x=>x.classList.remove("sel"));
-  $("#placeNext").disabled=state.place.length===0;
-});
-$("#placeNext").onclick=finish;
+$("#foodNext").addEventListener("click", () => { buildCalendar(); show("s3"); });
 
-/* ============================================================
-   SCREEN 5 — confirm + save
-   ============================================================ */
+/* ---------- when ---------- */
+const DAY_SLOTS = ["11:00","12:00","13:00"];
+const EVE_SLOTS = ["17:00","18:00","19:00","20:00","21:00"];
+let view = { y: today.getFullYear(), m: today.getMonth() };
+let calendarReady = false;
+
+function monthStart(y, m){ return new Date(y, m, 1); }
+function canShift(delta){
+  const min = monthStart(today.getFullYear(), today.getMonth());
+  const max = monthStart(today.getFullYear(), today.getMonth() + 11);
+  const next = monthStart(view.y, view.m + delta);
+  return next >= min && next <= max;
+}
+function renderCalendar(){
+  $("#calLabel").textContent = MONTHS[view.m] + " " + view.y;
+  $("#prevMonth").disabled = !canShift(-1);
+  $("#nextMonth").disabled = !canShift(1);
+  const days = $("#days");
+  days.innerHTML = "";
+  const first = new Date(view.y, view.m, 1);
+  const lead = (first.getDay() + 6) % 7;
+  const total = new Date(view.y, view.m + 1, 0).getDate();
+  for (let i = 0; i < lead; i++) {
+    const gap = document.createElement("span");
+    gap.className = "gap";
+    days.appendChild(gap);
+  }
+  for (let d = 1; d <= total; d++) {
+    const date = new Date(view.y, view.m, d);
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "day";
+    btn.textContent = String(d);
+    const wd = date.getDay();
+    if (wd === 0 || wd === 6) btn.classList.add("weekend");
+    if (date.getTime() === today.getTime()) btn.classList.add("today");
+    const selected = state.y === view.y && state.m === view.m && state.d === d;
+    btn.setAttribute("aria-pressed", selected ? "true" : "false");
+    btn.setAttribute("aria-label", MONTHS[view.m] + " " + d + ", " + view.y);
+    if (date < today) {
+      btn.disabled = true;
+    } else {
+      btn.addEventListener("click", () => {
+        state.y = view.y; state.m = view.m; state.d = d;
+        state.dateLabel = MONTHS[view.m] + " " + d + ", " + view.y;
+        renderCalendar();
+        checkTime();
+      });
+    }
+    days.appendChild(btn);
+  }
+}
+function fillTimes(el, slots){
+  if (el.children.length) {
+    el.querySelectorAll(".chip").forEach((c) => {
+      c.setAttribute("aria-pressed", c.dataset.time === state.time ? "true" : "false");
+    });
+    return;
+  }
+  slots.forEach((t) => {
+    const c = document.createElement("button");
+    c.type = "button";
+    c.className = "chip";
+    c.dataset.time = t;
+    c.textContent = t;
+    c.setAttribute("aria-pressed", "false");
+    c.addEventListener("click", () => {
+      state.time = t;
+      document.querySelectorAll("#dayChips .chip, #eveChips .chip").forEach((x) => {
+        x.setAttribute("aria-pressed", x.dataset.time === t ? "true" : "false");
+      });
+      checkTime();
+    });
+    el.appendChild(c);
+  });
+}
+function checkTime(){
+  const ready = Boolean(state.dateLabel && state.time);
+  $("#timeNext").disabled = !ready;
+  $("#timeNeed").textContent = ready ? "That time looks good" : "Pick a day and a time";
+}
+function buildCalendar(){
+  if (!calendarReady) {
+    fillTimes($("#dayChips"), DAY_SLOTS);
+    fillTimes($("#eveChips"), EVE_SLOTS);
+    $("#prevMonth").addEventListener("click", () => { if (canShift(-1)) { view.m -= 1; if (view.m < 0) { view.m = 11; view.y--; } renderCalendar(); } });
+    $("#nextMonth").addEventListener("click", () => { if (canShift(1)) { view.m += 1; if (view.m > 11) { view.m = 0; view.y++; } renderCalendar(); } });
+    calendarReady = true;
+  }
+  renderCalendar();
+  checkTime();
+}
+$("#timeNext").addEventListener("click", () => { buildPlace(); show("s4"); });
+
+/* ---------- where ---------- */
+const PLACES = [
+  ["🎬","Cinema"], ["☕","Cafe"], ["🛍️","The Mall"], ["🌳","Park walk"],
+  ["🎳","Bowling"], ["⛸️","Ice rink"], ["🎨","Art gallery"], ["😉","Your pick"]
+];
+function buildPlace(){
+  const g = $("#placeGrid");
+  if (g.children.length) return;
+  PLACES.forEach(([ic, lb]) => {
+    const label = ic + " " + lb;
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "pick";
+    b.setAttribute("aria-pressed", "false");
+    b.innerHTML = `<span class="ic">${ic}</span><span class="lb">${lb}</span>`;
+    b.addEventListener("click", () => {
+      g.querySelectorAll(".pick").forEach((x) => x.setAttribute("aria-pressed", "false"));
+      b.setAttribute("aria-pressed", "true");
+      $("#placeInput").value = "";
+      state.place = label;
+      $("#placeNext").disabled = false;
+      $("#placeNeed").textContent = "See you there";
+    });
+    g.appendChild(b);
+  });
+}
+$("#placeInput").addEventListener("input", (e) => {
+  state.place = e.target.value.trim();
+  $("#placeGrid").querySelectorAll(".pick").forEach((x) => x.setAttribute("aria-pressed", "false"));
+  const ok = state.place.length > 0;
+  $("#placeNext").disabled = !ok;
+  $("#placeNeed").textContent = ok ? "See you there" : "Pick a spot to continue";
+});
+$("#placeNext").addEventListener("click", finish);
+$("#editBtn").addEventListener("click", () => show("s2"));
+
 function finish(){
-  $("#summary").innerHTML=`
-    <div>🍴 Food: <b>${state.food||"—"}</b></div>
-    <div>📅 Date: <b>${state.dateLabel||"—"}</b></div>
-    <div>⏰ Time: <b>${state.time||"—"}</b></div>
-    <div>📍 Place: <b>${state.place||"—"}</b></div>
-    <div>💌 <b>${CONFIG.yourName}</b> will be there at that moment.</div>`;
+  $("#summary").innerHTML =
+    `<div><span>Food</span><b>${esc(state.food || "—")}</b></div>` +
+    `<div><span>Day</span><b>${esc(state.dateLabel || "—")}</b></div>` +
+    `<div><span>Time</span><b>${esc(state.time || "—")}</b></div>` +
+    `<div><span>Place</span><b>${esc(state.place || "—")}</b></div>` +
+    `<div><span>From</span><b>${esc(CONFIG.yourName)}</b></div>`;
   show("s5");
   burst();
   saveAnswer();
 }
 
 function saveAnswer(){
-  if(!CONFIG.sheetUrl){ $("#status").textContent="(Saving is off — add your Sheet URL in CONFIG to record this.)"; return; }
-  $("#status").textContent="Saving your answer… 💾";
-  const payload={ food:state.food, date:state.dateLabel, time:state.time, address:state.place };
-  fetch(CONFIG.sheetUrl,{
-    method:"POST",
-    mode:"no-cors",
-    headers:{"Content-Type":"text/plain;charset=utf-8"},
-    body:JSON.stringify(payload)
-  }).then(()=>{ $("#status").textContent="Saved 💖 See you then!"; })
-    .catch(()=>{ $("#status").textContent="Couldn't save automatically — but it's still a date! 💕"; });
+  const status = $("#status");
+  if (!CONFIG.sheetUrl) {
+    status.textContent = "This one stays between us.";
+    return;
+  }
+  status.textContent = "Tucking your answer away…";
+  const payload = { food: state.food, date: state.dateLabel, time: state.time, address: state.place };
+  fetch(CONFIG.sheetUrl, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(payload)
+  }).then(() => { status.textContent = "Saved. See you then."; })
+    .catch(() => { status.textContent = "Couldn't save it automatically. It's still a date."; });
 }
 
-/* confetti / heart burst */
 function burst(){
-  const set=["💖","💕","🎉","✨","🌸","💗"];
-  for(let i=0;i<40;i++){
-    const p=document.createElement("span");
-    p.textContent=set[i%set.length];
-    p.style.position="fixed"; p.style.left="50%"; p.style.top="40%";
-    p.style.fontSize=(16+Math.random()*20)+"px"; p.style.zIndex=9; p.style.pointerEvents="none";
+  const set = ["💖","💕","🎉","✨","🌸","💗"];
+  for (let i = 0; i < 28; i++) {
+    const p = document.createElement("span");
+    p.textContent = set[i % set.length];
+    p.style.position = "fixed";
+    p.style.left = "50%";
+    p.style.top = "38%";
+    p.style.fontSize = (16 + Math.random() * 18) + "px";
+    p.style.zIndex = "9";
+    p.style.pointerEvents = "none";
     document.body.appendChild(p);
-    const ang=Math.random()*Math.PI*2, dist=120+Math.random()*220;
-    const dx=Math.cos(ang)*dist, dy=Math.sin(ang)*dist - 80;
-    p.animate(
-      [{transform:"translate(-50%,-50%) scale(.4)",opacity:1},
-       {transform:`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) scale(1.2)`,opacity:0}],
-      {duration:1100+Math.random()*700, easing:"cubic-bezier(.2,.7,.3,1)"}
-    ).onfinish=()=>p.remove();
+    const ang = Math.random() * Math.PI * 2;
+    const dist = 90 + Math.random() * 180;
+    const dx = Math.cos(ang) * dist;
+    const dy = Math.sin(ang) * dist - 60;
+    p.animate([
+      { transform: "translate(-50%,-50%) scale(.4)", opacity: 1 },
+      { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(1.15)`, opacity: 0 }
+    ], { duration: 1000 + Math.random() * 600, easing: "cubic-bezier(.2,.7,.3,1)" }).onfinish = () => p.remove();
   }
 }
 
-/* ============================================================
-   Gentle background music — generated live (no audio files).
-   Soft pentatonic notes over a warm pad, looping quietly.
-   ============================================================ */
-const Music = (function(){
-  // If a file named in CONFIG.musicFile exists, we play the real song.
-  // Falls back to soft synth only on error (e.g. missing file on GitHub Pages) or autoplay block.
-  // Works on GitHub Pages / Netlify when song.mp3 is in the same folder as index.html.
-  const FILE = "./" + (CONFIG.musicFile || "song.mp3");
-  const FILE_VOL = 0.35;   // real-song volume (0..1) — keep it soft
-  let mode = null;         // "file" | "synth"
-  let audio = null;
-  let fileFailed = false;  // permanent failure (404, bad file, etc). Transient blocks (autoplay) will retry on toggle.
-  let ctx, master, timer, on = false;
+/* ---------- music ---------- */
+const Music = (function () {
+  const audio = new Audio(CONFIG.musicFile || "song.mp3");
+  audio.loop = true;
+  audio.preload = "auto";
+  audio.playsInline = true;
+  audio.setAttribute("playsinline", "");
 
-  /* ---------- synth fallback ---------- */
-  const scale=[261.63,293.66,329.63,392.00,440.00,523.25,587.33,659.25];
-  let idx=0, dir=1;
-  function note(freq,t,dur){
-    const o=ctx.createOscillator(), g=ctx.createGain();
-    o.type="triangle"; o.frequency.value=freq; o.connect(g); g.connect(master);
-    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.18,t+0.08);
-    g.gain.exponentialRampToValueAtTime(0.001,t+dur); o.start(t); o.stop(t+dur+0.05);
-  }
-  function pad(freq,t,dur){
-    const o=ctx.createOscillator(), g=ctx.createGain();
-    o.type="sine"; o.frequency.value=freq; o.connect(g); g.connect(master);
-    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.05,t+0.6);
-    g.gain.linearRampToValueAtTime(0.0,t+dur); o.start(t); o.stop(t+dur+0.1);
-  }
-  function step(){
-    const t=ctx.currentTime;
-    note(scale[idx],t,1.6);
-    if(Math.random()<0.5) note(scale[(idx+2)%scale.length]/2,t+0.4,1.4);
-    pad(scale[0]/2,t,2.2);
-    idx+=dir; if(idx>=scale.length-1||idx<=0) dir*=-1;
-  }
-  function startSynth(){
-    if(!ctx){ ctx=new (window.AudioContext||window.webkitAudioContext)();
-      master=ctx.createGain(); master.gain.value=0; master.connect(ctx.destination); }
-    if(ctx.state==="suspended") ctx.resume();
-    master.gain.cancelScheduledValues(ctx.currentTime);
-    master.gain.linearRampToValueAtTime(0.5, ctx.currentTime+1.2);
-    step(); clearInterval(timer); timer=setInterval(step,1300);
-    mode="synth"; on=true; setBtn();
-  }
-  function stopSynth(){
-    if(!ctx) return;
-    master.gain.cancelScheduledValues(ctx.currentTime);
-    master.gain.linearRampToValueAtTime(0, ctx.currentTime+0.6);
-    clearInterval(timer);
-  }
-
-  /* ---------- real-song file ---------- */
-  function fadeAudio(to){
-    if(!audio) return; const from=audio.volume, t0=performance.now(), dur=900;
-    (function tick(){ const k=Math.min((performance.now()-t0)/dur,1);
-      audio.volume=from+(to-from)*k; if(k<1) requestAnimationFrame(tick); })();
-  }
-  function startFile(){
-    if(!audio){
-      audio = new Audio();
-      audio.src = FILE;
-      audio.loop = true;
-      audio.volume = 0;
-      audio.preload = "auto";
-      audio.muted = false;
-      audio.load(); // start fetching early (helps on GitHub Pages)
-      audio.addEventListener("error", () => {
-        const errCode = audio.error ? audio.error.code : "?";
-        stat("song.mp3 load error (" + errCode + ") → melody");
-        fileFailed = true;
-        if (mode !== "synth") startSynth();
-      });
+  let userVol = 0.85;
+  try {
+    const saved = localStorage.getItem("date-invite-volume");
+    if (saved !== null) {
+      const n = Number(saved);
+      if (n >= 0 && n <= 1) userVol = n;
     }
-    audio.play().then(() => {
-      mode = "file"; on = true; fadeAudio(FILE_VOL); setBtn(); stat("♪ playing song");
-    }).catch(err => {
-      // Autoplay policy / transient block — do NOT mark fileFailed so user can retry via mute button
-      const name = (err && err.name) || "Error";
-      stat("song blocked (" + name + ") → melody this time");
-      startSynth();
-    });
+  } catch (e) {}
+  audio.volume = userVol;
+
+  let playing = false;
+  let fileFailed = false;
+  let seeking = false;
+  let ctx, master, timer, synthOn = false;
+  const scale = [261.63, 293.66, 329.63, 392, 440, 523.25, 587.33, 659.25];
+  let idx = 0, dir = 1;
+
+  const playBtn = $("#playBtn");
+  const glyph = $("#playGlyph");
+  const hint = $("#listenHint");
+  const timeEl = $("#trackTime");
+  const seek = $("#seek");
+  const volume = $("#volume");
+  const volIcon = $("#volIcon");
+  const player = $("#player");
+  const trackName = $("#trackName");
+  volume.value = String(Math.round(userVol * 100));
+
+  function fmt(t){
+    if (!Number.isFinite(t)) return "0:00";
+    const m = Math.floor(t / 60);
+    const s = Math.floor(t % 60);
+    return m + ":" + String(s).padStart(2, "0");
   }
-  function stat(m){ var el=document.getElementById("mstat"); if(el) el.textContent=m; }
-
-  /* ---------- public ---------- */
-  function play(){
-    // Unlock the audio context synchronously inside the click/gesture.
-    if(!ctx){ try{ ctx=new (window.AudioContext||window.webkitAudioContext)();
-      master=ctx.createGain(); master.gain.value=0; master.connect(ctx.destination);}catch(e){} }
-    if(ctx&&ctx.state==="suspended") ctx.resume();
-
+  function paint(){
+    const on = playing || synthOn;
+    player.classList.toggle("is-on", on);
+    playBtn.setAttribute("aria-label", on ? "Pause our song" : "Play our song");
+    volIcon.textContent = userVol <= 0.001 ? "🔇" : "♪";
     if (fileFailed) {
-      startSynth();
+      trackName.textContent = "Soft melody";
+      timeEl.textContent = on ? "playing" : "paused";
+      setHint("The song file did not open, so this is a little melody");
       return;
     }
-    // Always prefer trying the real song.mp3 (unless hard-failed).
-    // This allows re-attempting the file on later gestures (e.g. clicking the speaker icon)
-    // even if the very first autoplay attempt was blocked by the browser.
-    startFile();
+    trackName.textContent = "Our song";
+    const dur = audio.duration;
+    timeEl.textContent = fmt(audio.currentTime) + (Number.isFinite(dur) ? " / " + fmt(dur) : "");
+    if (!seeking && Number.isFinite(dur) && dur > 0) seek.value = String(Math.round((audio.currentTime / dur) * 1000));
+    if (on && userVol <= 0.001) setHint("Volume is all the way down");
+    else if (on) setHint("Playing · drag the line to skip ahead");
+    else if (audio.readyState === 0) setHint("Finding the song… tap the heart if it stays quiet");
+    else setHint("Tap the heart, or anywhere on the card");
+  }
+  function setHint(msg){
+    if (hint.textContent !== msg) hint.textContent = msg;
+  }
+  function remember(v){
+    userVol = v;
+    audio.volume = v;
+    try { localStorage.setItem("date-invite-volume", String(v)); } catch (e) {}
+    paint();
+  }
+
+  function note(freq, t, dur){
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = "triangle";
+    o.frequency.value = freq;
+    o.connect(g); g.connect(master);
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.22, t + 0.05);
+    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    o.start(t); o.stop(t + dur + 0.05);
+  }
+  function startSynth(){
+    if (!ctx) {
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      master = ctx.createGain();
+      master.gain.value = 0.9;
+      master.connect(ctx.destination);
+    }
+    if (ctx.state === "suspended") ctx.resume();
+    const step = () => {
+      const t = ctx.currentTime;
+      note(scale[idx], t, 1.5);
+      idx += dir;
+      if (idx >= scale.length - 1 || idx <= 0) dir *= -1;
+    };
+    step();
+    clearInterval(timer);
+    timer = setInterval(step, 1300);
+    synthOn = true;
+    playing = false;
+    paint();
+  }
+  function stopSynth(){
+    synthOn = false;
+    clearInterval(timer);
+    if (ctx && master) {
+      master.gain.cancelScheduledValues(ctx.currentTime);
+      master.gain.setValueAtTime(0, ctx.currentTime);
+    }
+  }
+
+  function disarm(){
+    window.removeEventListener("pointerdown", firstGesture, true);
+  }
+  function play(){
+    disarm();
+    if (fileFailed) { startSynth(); return; }
+    stopSynth();
+    audio.volume = userVol;
+    const attempt = audio.play();
+    playing = true;
+    paint();
+    if (attempt && attempt.catch) {
+      attempt.catch(() => {
+        playing = false;
+        paint();
+        setHint("Tap the heart to start the song");
+      });
+    }
   }
   function pause(){
-    on=false;
-    if(mode==="file"&&audio){ fadeAudio(0); setTimeout(()=>{ if(!on&&audio) audio.pause(); },950); }
-    else stopSynth();
-    setBtn();
+    playing = false;
+    audio.pause();
+    stopSynth();
+    paint();
   }
-  function toggle(){ on?pause():play(); }
-  function setBtn(){ document.getElementById("muteBtn").textContent = on ? "🔊" : "🔇"; }
-  return { play, toggle, isOn:()=>on };
+  function toggle(){ (playing || synthOn) ? pause() : play(); }
+
+  audio.addEventListener("timeupdate", paint);
+  audio.addEventListener("loadedmetadata", paint);
+  audio.addEventListener("play", () => { playing = true; paint(); });
+  audio.addEventListener("pause", () => { if (!synthOn) { playing = false; paint(); } });
+  audio.addEventListener("ended", () => {
+    audio.currentTime = 0;
+    if (playing) audio.play().catch(() => {});
+  });
+  audio.addEventListener("error", () => {
+    fileFailed = true;
+    playing = false;
+    startSynth();
+  });
+
+  seek.addEventListener("pointerdown", () => { seeking = true; });
+  seek.addEventListener("input", () => {
+    if (!Number.isFinite(audio.duration)) return;
+    timeEl.textContent = fmt(audio.duration * (seek.value / 1000)) + " / " + fmt(audio.duration);
+  });
+  const commitSeek = () => {
+    if (Number.isFinite(audio.duration)) audio.currentTime = audio.duration * (seek.value / 1000);
+    seeking = false;
+    paint();
+  };
+  seek.addEventListener("change", commitSeek);
+  seek.addEventListener("pointerup", commitSeek);
+  seek.addEventListener("pointercancel", commitSeek);
+
+  volume.addEventListener("input", () => remember(Number(volume.value) / 100));
+
+  playBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    toggle();
+  });
+
+  function firstGesture(e){
+    if (e.target.closest("#player")) return;
+    play();
+  }
+  window.addEventListener("pointerdown", firstGesture, true);
+
+  paint();
+  return { play, toggle };
 })();
-
-const muteBtn=document.getElementById("muteBtn");
-muteBtn.addEventListener("click",e=>{ e.stopPropagation(); Music.toggle(); muteBtn.classList.remove("hint"); });
-
-// Music ON by default: browsers block sound until the first touch/click, so we
-// start it on the very first interaction anywhere on the page.
-function firstGesture(){
-  if(!Music.isOn()) Music.play();
-  ["pointerdown","touchstart","click","keydown"].forEach(ev=>window.removeEventListener(ev,firstGesture,true));
-}
-["pointerdown","touchstart","click","keydown"].forEach(ev=>window.addEventListener(ev,firstGesture,true));
 </script>
 </body>
 </html>

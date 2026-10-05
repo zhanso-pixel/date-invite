@@ -1,77 +1,75 @@
-# 💌 Date invite — setup
+# Date invite — setup
 
-Three files:
-- `index.html` — the page she sees (works on its own, even by double-clicking it).
+Files:
+- `index.html` — the page she sees (works on its own).
+- `song.mp3` — the song the player loops.
 - `google-apps-script.gs` — saves her answers to a Google Sheet.
 - `SETUP.md` — this guide.
 
----
-
 ## 1. Put your name in
 
-Open `index.html`, find the `CONFIG` block near the bottom (`<script>` section):
+Open `index.html` and find `CONFIG`:
 
 ```js
 const CONFIG = {
-  yourName: "Zhanserik",   // <-- put YOUR name
-  sheetUrl: ""      // <-- (filled in step 2)
+  yourName: "Zhanserik",
+  sheetUrl: "",
+  musicFile: "song.mp3"
 };
 ```
 
-Change `"Me"` to your name. The final screen says *"<name> will be there at that moment."*
+The last screen says "<name> will be there."
 
-If you want, you can stop here — the page fully works without saving. To save her answers to a Sheet, do step 2.
+## 2. Music
 
----
+Keep `song.mp3` in the same folder as `index.html`. The player at the bottom has play, a seek bar, and a volume slider. The song starts on the first tap anywhere on the card, or when she taps the heart.
 
-## 2. Save answers to a Google Sheet (optional)
+Browsers block sound until that first tap. The heart stays on "play" until the song is actually going, so it does not look on while it is silent. If the file is missing, the page falls back to a soft melody.
 
-1. Go to **sheets.google.com** → create a blank sheet (name it anything).
-2. Top menu: **Extensions ▸ Apps Script**.
-3. Delete whatever code is there, paste the contents of **`google-apps-script.gs`**, click 💾 **Save**.
-4. Click **Deploy ▸ New deployment**.
-   - Click the ⚙️ gear → choose **Web app**.
-   - **Description:** anything.
-   - **Execute as:** *Me*.
-   - **Who has access:** **Anyone**. ← important, so her browser can post to it.
-   - Click **Deploy**, then **Authorize access** and allow (it's your own script).
-5. Copy the **Web app URL** (ends in `/exec`).
-6. Paste that URL into `sheetUrl` in `index.html`:
-   ```js
-   sheetUrl: "https://script.google.com/macros/s/AKfyc..../exec"
-   ```
+Default volume is 85%, and the slider is remembered on this phone or computer. Turn it up if a room is loud. On iPhone, the side buttons control loudness too.
 
-Test: open `index.html`, go through it once, then refresh your Sheet — a new row should appear with Food / Date / Time / Place. ✅
+## 3. Save answers to a Google Sheet (optional)
 
-> If you ever change the `.gs` code, do **Deploy ▸ Manage deployments ▸ Edit ▸ New version** so the URL keeps working.
+1. Go to **sheets.google.com** and create a blank sheet.
+2. **Extensions ▸ Apps Script**.
+3. Replace the sample code with `google-apps-script.gs` and save.
+4. **Deploy ▸ New deployment**.
+   - Gear icon → **Web app**.
+   - **Execute as:** Me.
+   - **Who has access:** Anyone.
+   - Deploy, then authorize.
+5. Copy the web app URL (it ends in `/exec`) into `sheetUrl`.
 
----
+Walk through the page once, then refresh the Sheet. A row should appear with Food, Date, Time, and Place.
 
-## 3. Test it locally
+If you change the script later: **Deploy ▸ Manage deployments ▸ Edit ▸ New version**.
 
-Just **double-click `index.html`** — it opens in your browser. Walk through the whole flow.
-- On a **laptop**, the *No* button runs away from your cursor.
-- On a **phone**, the *No* button shrinks and changes its mind each tap. 😄
+## 4. Try it
 
----
+From this folder:
 
-## 4. Hosting (we'll do this later)
+```bash
+python3 -m http.server 8765
+```
 
-Easiest = **Netlify Drop**: go to `app.netlify.com/drop`, drag the `date-invite` folder in,
-and you get a public link to text her. (Other options: GitHub Pages, Vercel, Cloudflare Pages.)
+Open `http://localhost:8765` on your phone and on a laptop.
 
-For **GitHub Pages**:
-- Push everything including `song.mp3` (the 7.7MB file must be in the repo).
-- Go to repo → Settings → Pages → Source: "Deploy from a branch" → branch `main` /root.
-- The music will try to play the real song first. If blocked by browser or the file is missing from the published site, it falls back to a soft melody.
-- Make sure you visit the `https://YOURNAME.github.io/date-invite/` URL (not the raw.githubusercontent.com link — raw does not host playable media properly).
+- Laptop: the No button slips away from the cursor.
+- Phone: No shrinks and changes its mind. Yes gets easier to press.
+- The calendar starts on this month. Days before today are off. You can move forward month by month.
+- The player seek bar and volume work while the questions are on screen.
 
----
+## 5. Put it online
 
-## Customizing
+GitHub Pages: Settings → Pages → Deploy from branch `main` / root.
 
-- **Food options** — edit the `FOODS` list in `index.html`.
-- **Time slots** — edit the `slots` array.
-- **Place suggestions** — edit the `PLACES` list.
-- **Month shown** — `MONTH = {year:2026, month:6}` (month is 0-indexed, so `6` = July). The calendar auto-switches to current month if the preferred one is entirely in the past. Days before today are greyed out and unselectable.
-- **Colors** — the `:root` variables at the top of the `<style>`.
+Open the `https://YOURNAME.github.io/date/` link. The raw GitHub file link will not play the mp3 properly.
+
+Netlify Drop also works: drag this folder onto `app.netlify.com/drop`.
+
+## Customize
+
+- Foods: the `FOODS` list in `index.html`.
+- Times: the `DAY_SLOTS` and `EVE_SLOTS` lists.
+- Places: the `PLACES` list.
+- Colors: the `:root` variables at the top of the style block.

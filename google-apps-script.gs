@@ -9,7 +9,6 @@ function doPost(e) {
   try {
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
 
-    // Add a header row the first time
     if (sheet.getLastRow() === 0) {
       sheet.appendRow(["Submitted at", "Food", "Date", "Time", "Place"]);
     }
@@ -35,7 +34,6 @@ function doPost(e) {
   }
 }
 
-// Lets you open the web-app URL in a browser to confirm it's live.
 function doGet() {
   return ContentService.createTextOutput("It's alive 💖");
 }
